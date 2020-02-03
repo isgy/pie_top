@@ -24,7 +24,7 @@ def main():
     print("____________________________________________________________________\n")
     print("\n ")
     print(" For the script to run at startup, the systemd service pie-top.service\n")
-    print(" must be enabled - $ sudo systemctl enable pie-top.service\n")
+    print(" must be enabled - $ sudo systemctl enable pie_top.service\n")
     print("\n")
 
     with open(mempath) as f:
@@ -42,7 +42,7 @@ def main():
     global counter
     logdata.update({counter:[timestr,memperc,top_proc.stdout]})
     changed = []
-    if memperc >= 60:
+    if memperc >= 80:
        with open("/var/log/pie-top.log","a+") as f:
            #num_lines = sum(1 for line in f)
            #if num_lines == 0:
@@ -67,9 +67,9 @@ def main():
            f.write('\n')
            f.write("------------------------------------------------------------\n")
            dlen = len(logdata)
-           if dlen > 1:
+           if dlen > 12:
               currdata = logdata[counter][2].split('\n')    #get the list of processes
-              prevdata = logdata[counter-1][2].split('\n')    #get the data from 3 minutes ago (4 samples per minute * 3)
+              prevdata = logdata[counter-12][2].split('\n')    #get the data from 3 minutes ago (4 samples per minute * 3)
               currdata = currdata[:-1]    #needed because of the extra \n
               prevdata = prevdata[:-1]
               print(currdata)
