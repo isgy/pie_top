@@ -1,0 +1,12 @@
+[Unit]
+Description=A tiny memory monitor and logger
+
+[Service]
+Type=simple
+ExecStart=/absolute/path/to/pie_top.py
+User=root
+
+[Install]
+WantedBy=default.target
+
+

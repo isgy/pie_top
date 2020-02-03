@@ -1,31 +1,40 @@
+#!/usr/bin/env python3
+
 import threading, time, os, subprocess
 from sys import platform, exit
+from optparse import OptionParser
 
 mempath = '/proc/meminfo'
 meminfo = {}
 logdata = {}
 counter = 0
+logfile = '/var/log/pie_top.log'
 
 def main():
     if not platform.startswith("linux"):
         print("this script only runs on linux platforms")
         exit()
 
-    print("\n")
-    print("                 A TINY MEMORY MONITOR AND LOGGER\n")
-    print("------------------------------------------------------------------\n")
-    print("                 systemd service: pie-top.service\n")
-    print("\n")
-    print(" This script checks the overall memory usage of the system (RSS)\n")
-    print(" every 15 seconds and logs additional information about the current\n")
-    print(" system to /var/log/pie.top.log when the RSS exceeds\n")
-    print(" 80%\n")
-    print("\n")
-    print("____________________________________________________________________\n")
-    print("\n ")
-    print(" For the script to run at startup, the systemd service pie-top.service\n")
-    print(" must be enabled - $ sudo systemctl enable pie_top.service\n")
-    print("\n")
+    global logfile
+    global counter
+
+
+    if counter == 0:
+        print("\n")
+        print("                 A TINY MEMORY MONITOR AND LOGGER\n")
+        print("------------------------------------------------------------------\n")
+        print("                 systemd service: pie_top.service\n")
+        print("\n")
+        print(" This script checks the overall memory usage of the system (RSS)\n")
+        print(" every 15 seconds and logs additional information about the current\n")
+        print(" system to /var/log/pie_top.log when the RSS exceeds\n")
+        print(" 80%\n")
+        print("\n")
+        print("____________________________________________________________________\n")
+        print("\n ")
+        print(" For the script to run at startup, the systemd service pie_top.service\n")
+        print(" must be enabled - $ sudo systemctl enable pie_top.service\n")
+        print("\n")
 
     with open(mempath) as f:
         for line in f.readlines():
@@ -39,11 +48,10 @@ def main():
     timestr = time.strftime('%Y-%m-%d %H:%M:%S %Z', time.localtime(t))
 
     top_proc = subprocess.run("ps axo rss,pid,comm | sort -n | tail -n 25 | sort -rn", shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-    global counter
     logdata.update({counter:[timestr,memperc,top_proc.stdout]})
     changed = []
     if memperc >= 80:
-       with open("/var/log/pie-top.log","a+") as f:
+       with open(logfile,"a+") as f:
            #num_lines = sum(1 for line in f)
            #if num_lines == 0:
            f.write("DATE AND TIME (where RSS > 80%)  |  OVERALL MEMORY USAGE %\n")
@@ -102,10 +110,15 @@ def main():
               f.write('\n')
 
 
-    starttime = t
+    #starttime = t
     counter += 1
-    print("tick\n")
     t = threading.Timer(15,main).start()
 
 if __name__ == "__main__":
+    parser = OptionParser()
+    parser.add_option("-f", "--file", dest="filename",
+        help="write log to FILE", metavar="FILE")
+    (options, args) = parser.parse_args()
+    if options.filename:
+        logfile = options.filename
     main()
